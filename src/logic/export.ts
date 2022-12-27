@@ -1,29 +1,34 @@
-import Directus, { CollectionGetResponse } from "../services/directus.js"
+import Directus from "../services/directus.js"
 import yaml from 'js-yaml'
 import * as fs from 'fs-extra'
 import path from "node:path"
 import filenamify from "filenamify"
+import { plainToInstance, ClassConstructor } from "class-transformer"
+import FlowV1 from "../types/v1/flow.js"
+import OperationV1 from "../types/v1/operation.js"
 
 async function exportFlows(exportPath: string, options: {url: string, token?: string}): Promise<void>{
     const {url, token} = options
     const directus = new Directus(url, token)
-    
-    const flowsPath = path.resolve(exportPath, 'flows')
-    const operationsPath = path.resolve(exportPath, 'operations')
-
     await Promise.all([
-        exportToFiles(flowsPath, directus.getFlows()),
-        exportToFiles(operationsPath, directus.getOperations())
+        exportToFiles(FlowV1, directus, exportPath),
+        exportToFiles(OperationV1, directus, exportPath)
     ])
 }
 
-async function exportToFiles(exportPath: string, getCollectionPromise: Promise<CollectionGetResponse>): Promise<void>{
-    const collection = await getCollectionPromise
+async function exportToFiles<T>(cls: ClassConstructor<T>, directus: Directus, baseExportPath: string): Promise<void>{
+    //@ts-ignore
+    const typeUrl = cls.url
+    //@ts-ignore
+    const typeExportPath = cls.exportPath
+
+    const collection = await directus.getJson(typeUrl)
     
     await Promise.all(collection.data.map(async (element: any) => {
-        const flowYamlString = yaml.dump(element)
+        const flowV1 = plainToInstance(cls, element, {excludeExtraneousValues: true})
+        const flowYamlString = yaml.dump(flowV1)
         const fileName = filenamify(element.name.replaceAll(" ", "_"), {replacement: "_"})+'.yaml'
-        const filePath = path.resolve(exportPath, fileName)
+        const filePath = path.resolve(baseExportPath, typeExportPath, fileName)
         await fs.outputFile(filePath, flowYamlString)
     }));
 }

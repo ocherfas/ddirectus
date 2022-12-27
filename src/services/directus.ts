@@ -28,11 +28,15 @@ export default class Directus{
         return response.json()
     }
 
-    async getFlows(): Promise<FlowsGetReponse>{
-        return this.getJson('flows')
-    }
+    async postJson(path: string, collection: []): Promise<void>{
+        const requestUrl = new URL(path, this.url)
 
-    async getOperations(): Promise<OperationsGetResponse>{
-        return this.getJson('operations')
+        await fetch(requestUrl.toString(), {
+            method: "POST",
+            body: JSON.stringify(collection),
+            headers: this.token ? {
+                'Authorization': `Bearer ${this.token}`
+            } : {}
+        })
     }
 }
