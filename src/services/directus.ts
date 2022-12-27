@@ -1,5 +1,12 @@
 import fetch from "node-fetch";
 
+export interface CollectionGetResponse{
+    data: []
+}
+
+export interface FlowsGetReponse extends CollectionGetResponse {};
+export interface OperationsGetResponse extends CollectionGetResponse {};
+
 export default class Directus{
     token?: string;
     url: string;
@@ -9,8 +16,8 @@ export default class Directus{
         this.url = url
     }
 
-    async getFlows(): Promise<any>{
-        const requestUrl = new URL('flows', this.url)
+    async getJson(path: string): Promise<any>{
+        const requestUrl = new URL(path, this.url)
         
         const response = await fetch(requestUrl.toString(), {
             headers: this.token ? {
@@ -18,7 +25,14 @@ export default class Directus{
             } : {}
         })
 
-        const json = await response.json()
-        return json
+        return response.json()
+    }
+
+    async getFlows(): Promise<FlowsGetReponse>{
+        return this.getJson('flows')
+    }
+
+    async getOperations(): Promise<OperationsGetResponse>{
+        return this.getJson('operations')
     }
 }
