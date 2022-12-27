@@ -1,0 +1,18 @@
+{
+  "name": "ddirectus",
+  "version": "0.0.1",
+  "description": "Easily export and import Directus flow and operations to and from yaml files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "author": "Or Cherfas",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "commander": "^9.4.1"
+  }
+}
