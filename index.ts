@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import exportCommand from "./src/commands/export/export.js";
+import importCommand from "./src/commands/import/import.js";
 
 async function main(){
     if(process.env.NODE_ENV == 'development'){
@@ -14,6 +15,7 @@ async function main(){
         .version('0.0.1')
         
     program.addCommand(exportCommand)
+    program.addCommand(importCommand)
 
     program.parseAsync()
 }

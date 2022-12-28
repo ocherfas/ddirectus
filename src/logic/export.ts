@@ -4,8 +4,8 @@ import * as fs from 'fs-extra'
 import path from "node:path"
 import filenamify from "filenamify"
 import { plainToInstance, ClassConstructor } from "class-transformer"
-import FlowV1 from "../types/v1/flow.js"
-import OperationV1 from "../types/v1/operation.js"
+import FlowV1 from "../directusTypes/v1/flow.js"
+import OperationV1 from "../directusTypes/v1/operation.js"
 
 async function exportFlows(exportPath: string, options: {url: string, token?: string}): Promise<void>{
     const {url, token} = options
