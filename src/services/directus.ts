@@ -1,18 +1,6 @@
 import fetch from "node-fetch";
+import { DirectusError } from "../errors";
 import { DirectusReponse, FlowPatchRequest, FlowPostRequest, FlowResponse, OperationPatchRequest, OperationPostRequset, OperationResponse } from "../types";
-
-export interface CollectionGetResponse{
-    data: []
-}
-
-export interface FlowsGetReponse extends CollectionGetResponse {};
-export interface OperationsGetResponse extends CollectionGetResponse {};
-
-class DirectusError extends Error{
-    constructor(errors: {message: string}[]){
-        super(errors.map(error => error.message).toString())
-    }
-}
 
 export default class Directus{
     token?: string;
