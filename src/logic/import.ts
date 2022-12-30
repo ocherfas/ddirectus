@@ -5,17 +5,26 @@ import { getType } from "../directusTypes/directusUrlDecorator.js"
 import { plainToClass } from "class-transformer"
 import { validate } from "class-validator"
 import lodash from "lodash"
-import { DirectusType } from "../types.js"
-const {isEmpty} = lodash
+import { DirectusType, DirectusTypeMapValue } from "../types.js"
+const {isEmpty, groupBy, mapValues} = lodash
 
 async function importFlows(paths: string[], options: {url: string, token?: string}){
     const {url, token} = options
     const directus = new Directus(url, token)
-
-    console.log(paths)
-
     const allObjects = await loadAllObjectsFromPaths(paths)
-    validateAndConvertObjects(allObjects)
+    const objectsWithTypes = await validateAndConvertObjects(allObjects)
+    
+    const groupedObjectsWithTypes = groupBy(objectsWithTypes, objectWithType => objectWithType.typeMapValue.url)
+    const groupedObjects = mapValues(groupedObjectsWithTypes, objectsWithTypes => objectsWithTypes.map(objectWithType => objectWithType.object))
+    await Promise.all(Object.keys(groupedObjects).map(url => createObjects(directus, url, groupedObjects[url] as [])))
+}
+
+async function createObjects(directus: Directus, url: string, objects: []){
+    const withoutRedundentKeys = objects.map((object: DirectusType) => {
+        const {directusType, directusVersion, ...withoutRedudentKeys} = object
+        return withoutRedudentKeys
+    })
+    await directus.postJson(url, withoutRedundentKeys)
 }
 
 async function loadAllObjectsFromPaths(paths: string[]){
@@ -46,18 +55,19 @@ async function validateAndConvertObject(object: DirectusType){
         throw new Error(`Error reading object: object must declare directusType and directusVersion`)
     }
 
-    const constructor = getType(type, version)
-    if(!constructor){
+    const typeMapValue = getType(type, version) 
+    
+    if(!typeMapValue){
         throw new Error(`directusType ${type} of directusVersion ${version} is not known`)
     }
 
-    const classObject = plainToClass(constructor, object)
+    const classObject = plainToClass(typeMapValue.ctr, object) as object
     const validationErrors = await validate(classObject)
     if (!isEmpty(validationErrors)){
         throw new Error(`Error validating object: ${validationErrors}`)
     }
 
-    return classObject
+    return {object: classObject, typeMapValue}
 }
 
 export default importFlows
